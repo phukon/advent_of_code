@@ -32,6 +32,30 @@ function main() {
     const [leftArray, rightArray] = halveArray(filteredArray);
     leftArray.sort((a, b) => a - b);
     rightArray.sort((a, b) => a - b);
+
+    const diffArray: number[] = [];
+    let diffSum: number = 0;
+    for (let i = 0; i < leftArray.length; i++) {
+      const absDiff: number = Math.abs(leftArray[i] - rightArray[i]);
+      diffArray.push(absDiff);
+    }
+
+    diffSum = diffArray.reduce((acc, curr) => acc + curr, 0);
+
+    // ==============================
+
+    let simScore: number = 0;
+    for (const element of leftArray) {
+      let count: number = 0;
+      rightArray.map((el) => {
+        if (el === element) count += 1;
+      });
+
+      simScore += count * element;
+    }
+
+    console.log("Total distance: ", diffSum, "\n");
+    console.log("Similarity Score: ", simScore);
   } catch (e) {
     console.error("Error processing file:", e);
   }
