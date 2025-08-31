@@ -1,59 +1,80 @@
-import fs from "fs";
+import fs from "node:fs";
 
-function readFileSync(filePath: string) {
+function loadFileData(): string {
   try {
-    const data = fs.readFileSync(filePath, "utf-8");
+    const data = fs.readFileSync("./2024/02/input.txt", "utf8");
     return data;
-  } catch (e) {
-    console.error("Error reading file: ", e);
-    throw e;
+  } catch (err) {
+    console.error("Error loading the data from text file: ", err);
+    throw err;
   }
 }
 
-function isSafeReport(report: number[]): boolean {
-  let isIncreasing = true;
-  let isDecreasing = true;
+function buildReport(rawFileData: string) {
+  return rawFileData.split(/\r\n|\n/).map((r) => r.split(/\s+/).map(Number));
+}
 
-  for (let i = 1; i < report.length; i++) {
-    const diff = report[i] - report[i - 1];
+function isValidDifference(x: number, y: number): boolean {
+  const difference: number = Math.abs(x - y);
+  if (difference <= 3 && difference >= 1) return true;
+  return false;
+}
 
-    // this checks for monotonicity
-    if (Math.abs(diff) < 1 || Math.abs(diff) > 3) {
-      return false;
-    }
+function checkSafety(report: number[]): boolean {
+  let isDecreasing: boolean = false;
+  let isIncreasing: boolean = false;
 
-    // trend breakers
-    if (diff > 0) isDecreasing = false;
-    if (diff < 0) isIncreasing = false;
+  for (let i = 0; i < report.length - 1; i++) {
+    const curr: number = report[i],
+      next: number = report[i + 1];
 
-    // if both flags are false, it means the trend switched somewhere
-    if (!isIncreasing && !isDecreasing) {
-      return false;
+    if (!isValidDifference(curr, next)) return false;
+
+    if (curr > next) {
+      isDecreasing = true;
+    } else if (report[i] < report[i + 1]) {
+      isIncreasing = true;
     }
   }
 
-  return true; // If consistent trend is maintained
+  if ((isDecreasing && !isIncreasing) || (!isDecreasing && isIncreasing))
+    return true;
+
+  return false;
+}
+
+function checkSafetyWithDampener(report: number[]): boolean {
+  if (checkSafety(report)) return true;
+
+  for (let i = 0; i < report.length; i++) {
+    const modified = [...report.slice(0, i), ...report.slice(i + 1)];
+    if (checkSafety(modified)) return true;
+  }
+  return false;
 }
 
 function main() {
   try {
-    const input = readFileSync("input.txt");
-
-    const reports = input
-      .split(/\r\n|\n/) // Split by newline
-      .filter((line) => line.trim() !== "") // Remove empty lines
-      .map((el) => el.split(/\s+/).map(Number));
-
+    const rawFileData: string = loadFileData();
+    const reports: number[][] = buildReport(rawFileData);
     let safeReportCount: number = 0;
-    for (let report of reports) {
-      if (isSafeReport(report)) safeReportCount++;
-    }
 
-    console.log("Reports: ", reports[0]);
+    reports.forEach((r) => {
+      if (checkSafetyWithDampener(r)) safeReportCount += 1;
+    });
+
     console.log("Safe reports count: ", safeReportCount);
+    console.log("Total reports count: ", reports.length);
   } catch (e) {
-    console.error("Error: ", e);
+    console.error(e);
   }
 }
 
 main();
+
+// console.log(Array.from("lol"));
+// console.log(
+//   `row1col1 row1col2 row1col3
+// row2col1 row2col2 row2col3
+// row3col1 row3col2 row3col3`.split("\n"),
+// );
