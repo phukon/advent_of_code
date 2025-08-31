@@ -57,4 +57,3 @@ function main() {
 }
 
 main();
-// console.log("Is safe??", isSafe([1, 3, 2, 4, 5]));
